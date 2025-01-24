@@ -1,0 +1,30 @@
+#!/bin/bash
+ 
+primary=$1
+shift
+altlist="DNS:$primary"
+ 
+for i in $@; do
+  altlist="${altlist},DNS:${i}"
+done
+ 
+openssl ecparam -name prime256v1 -genkey | openssl ec -out $primary.key -aes128
+openssl req -out $primary.csr -new -key $primary.key -nodes \
+  -config <(echo "
+[req]
+prompt = no
+distinguished_name = dn
+req_extensions = ext
+ 
+[dn]
+CN = $primary
+O = OrgName
+OU = OUName
+emailAddress = your-team@email.com
+C = US
+ST = Oregon
+L = Portland
+ 
+[ext]
+subjectAltName = ${altlist}
+")
